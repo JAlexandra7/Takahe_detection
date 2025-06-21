@@ -1,0 +1,241 @@
+---
+title: "Downloading bird images"
+author: "Juliet Alexandra"
+date: "2025-06-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Loading packages
+```{r}
+library(tidyverse)
+```
+
+# Reading in the multimedia file
+```{r}
+verbatim <- read.delim("0047164-250525065834625/verbatim.txt", stringsAsFactors = FALSE)
+
+```
+
+# Looking at the data
+```{r}
+head(verbatim)
+```
+
+
+# Selecting Relevant Columns
+```{r}
+verbatim2 <- verbatim %>% select(gbifID, references, scientificName)
+
+verbatim2[1:10, ]
+```
+
+# Cleaning data by removing occurances with missing values
+```{r}
+# Function to calculate the percentage of empty values
+percentage_missing_values <- function(df, column_name) {
+  empty_count <- sum(df[[column_name]] == "" | is.na(df[[column_name]]))
+  percentage <- (empty_count / nrow(df)) * 100
+  return(round(percentage, 2))
+}
+
+result <- percentage_missing_values(verbatim2, "references")
+print(paste("Percentage of empty values:", result, "%"))
+
+result <- percentage_missing_values(verbatim2, "scientificName")
+print(paste("Percentage of empty values:", result, "%"))
+
+result <- percentage_missing_values(verbatim2, "gbifID")
+print(paste("Percentage of empty values:", result, "%"))
+
+```
+
+Only the references column has empty values
+
+```{r}
+# Removing empty values from the dataset
+verbatim3 = verbatim2[!verbatim2$references == "",] 
+verbatim3
+```
+
+# Looking at the count of Takahe and Pukeko in the dataset
+```{r}
+count(verbatim3, scientificName)
+```
+
+
+# Extracting image URLs and species names
+```{r}
+image_urls <- verbatim3$references
+species_names <- verbatim3$scientificName
+gbifID <- verbatim3$scientificName
+
+```
+
+# Creating a folder for the images
+```{r}
+if (!dir.exists("train_data")) dir.create("train_data")
+
+```
+
+# Functions for downloading images with species name
+
+Ensuring all links are passing the complete URL:
+```{r}
+ensure_protocol <- function(url) {
+  if (!grepl("^https?://", url)) {
+    return(paste0("https://", url))
+  }
+  return(url)
+}
+
+```
+
+```{r}
+library(rvest)
+
+# Function to get image URL from GBIF reference page
+get_image_url <- function(reference_url) {
+  # Ensure the reference URL is complete
+  reference_url <- ensure_protocol(reference_url)
+  page <- read_html(reference_url)
+  
+  # Extract image link using the meta tag with the property "og:image"
+  image_url <- page %>%
+    html_nodes('meta[property="og:image"]') %>%
+    html_attr("content")
+  
+  # Filter for actual image URLs while ignoring case sensitivity
+  image_url <- image_url[grepl("jpe?g|png", image_url, ignore.case = TRUE)]
+  
+  # Return first valid image URL
+  return(image_url[1])
+}
+
+```
+
+```{r}
+# Function to download images with species names
+download_image <- function(image_url, species_name, gbifID) {
+  if (!is.na(image_url)) {
+    file_name <- paste0("Train_data/", gsub(" ", "_", species_name), "__", as.character(gbifID), ".jpg")
+    tryCatch({
+      download.file(image_url, file_name, mode = "wb")
+      print(paste("Downloaded:", file_name))
+    }, error = function(e) {
+      print(paste("Failed to download:", image_url))
+      print(e)
+    })
+  }
+}
+```
+
+# Downloading
+
+```{r}
+image_references <- verbatim3$references
+species_names <- verbatim3$scientificName
+gbifID <- verbatim3$gbifID
+```
+
+```{r}
+# Loop through each reference & download images
+for (i in seq_along(image_references)) {
+  image_url <- get_image_url(image_references[i])
+  download_image(image_url, species_names[i], gbifID[i])
+}
+```
+
+# Useful code for debugging
+Code for downloading a single image:
+```{r}
+i = 2
+image_url <- get_image_url(image_references[i])
+download_image(image_url, species_names[i], gbifID[i])
+```
+
+Get image URL for reference image based on index
+```{r}
+i = 1
+image_url <- get_image_url(image_references[i])
+cat("Retrieved image URL:", image_url, "\n")
+image_references[i]
+```
+
+# Finding missing files:
+```{r}
+library(stringr)
+# Finding which images have already been downloaded based on gbifID
+folder_path <- "Train_data"
+files <- list.files(folder_path)
+extracted_numbers <- str_extract(files, "\\d+")
+extracted_numbers_numeric <- as.numeric(extracted_numbers)
+
+length(extracted_numbers_numeric)
+
+# Placing all images that have not already been downloaded into a dataframe based on gbifID
+verbatim_not_downloaded <- verbatim3[!(verbatim3$gbifID %in% extracted_numbers_numeric), ]
+nrow(verbatim_not_downloaded)
+```
+
+```{r}
+head(verbatim_not_downloaded, 20)
+```
+
+These images can't be downloaded - some are gifs, some are voice recordings, other url's do not directly link to an image.
+
+As a result these occurrences have been excluded from the data set.
+
+```{r}
+# Finding images with specific gbifID's
+verbatim[verbatim$gbifID == 1883, ]
+min(verbatim$gbifID)
+```
+
+# Deleting incorrectly labeled files
+```{r}
+# Load stringr package for regular expression functions
+library(stringr)
+# Define the folder path
+folder_path <- "Train_data"
+threshold <- 800000  # Specify your threshold here
+
+# List all files in the folder (full names needed for deletion)
+files <- list.files(folder_path, full.names = TRUE)
+
+# Extract the first sequence of digits from each file name.
+# We use basename() to remove directory names from the file name for extraction.
+numbers <- as.numeric(str_extract(basename(files), "\\d+"))
+
+# Optionally, display the extracted numbers for debugging
+# print(data.frame(File = basename(files), Number = numbers))
+
+# Identify which files have a number less than the threshold.
+# We also check for NA (files where a number was not extracted) and skip those.
+files_to_delete <- files[!is.na(numbers) & (numbers < threshold)]
+
+# If you want to see which files will be removed, print them:
+cat("Files to be deleted:\n")
+print(files_to_delete)
+
+```
+
+```{r}
+# Delete the unwanted files
+file.remove(files_to_delete)
+
+print("Files that did not contain the specified numbers have been deleted.")
+```
+# Identifying duplicates
+```{r}
+duplicate_occurrences <- numbers[duplicated(numbers)]
+print(duplicate_occurrences)
+
+```
+No duplicates
+
+
