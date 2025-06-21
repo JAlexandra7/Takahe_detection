@@ -12,3 +12,12 @@ The data set has imbalanced classes to imrpove the accuracy of the model class w
 The data cleaning and downloading of the images was performed in Rstudio.
 
 This was made using Python 3.12.9
+
+The exploratory data analysis showed some significant class imbalance:
+![Alt text](Images/class_distribution.png)
+This was handled by adding class weights to the loss function.
+
+The images had different resolutions:
+![Alt text](Images/Distribution of Image Resolutions.png)
+When loading the images in to work with Pytorch the images are resized to 600 by 600
+
