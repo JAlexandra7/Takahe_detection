@@ -15,9 +15,12 @@ This was made using Python 3.12.9
 
 The exploratory data analysis showed some significant class imbalance:
 ![Alt text](Images/class_distribution.png)
+
 This was handled by adding class weights to the loss function.
 
 The images had different resolutions:
-![Alt text](Images/Distribution of Image Resolutions.png)
-When loading the images in to work with Pytorch the images are resized to 600 by 600
+![Alt](Images/Distribution of Image Resolutions.png)
+
+To resolve this when loading the images in to work with Pytorch the images are resized to 600 by 600
+
 
