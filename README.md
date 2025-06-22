@@ -1,5 +1,5 @@
 # Takahe_detection
-# Citations
+## Citations
 GBIF.org (15 June 2025) GBIF Occurrence Download  https://doi.org/10.15468/dl.mhxdcy
 
 Data was obtained from GBIF-NZ, it includes records from 6 datasets: iNaturalist Research-grade Observations Observation.org, Nature data from around the World, Auckland Museum Land Vertebrates Collection, Xeno-canto - Bird sounds from around the world, NABU|naturgucker, MVZ Egg and Nest Collection (Arctos)
@@ -16,6 +16,7 @@ The data cleaning and downloading of the images was performed in Rstudio.
 
 This was made using Python 3.12.9
 
+## EDA
 The exploratory data analysis showed some significant class imbalance:
 ![Alt text](Images/class_distribution.png)
 
@@ -27,20 +28,44 @@ The images resolutions varied:
 
 To resolve this when loading the images in to work with Pytorch the images are resized depending on the model.
 
-I made three models and stacked them to get my final model.
+## Modelling
+I made three models and stacked them to get my final model. The meta-model trained on the outputs of modelA, modelB and modelC was a Logistic Regression model.
 
-The first two models, modelA and modelB, were convolutional neural networks (CNNS) with different class weights for the loss function. The third model, modelC, was a EfficientNet-B3 model.
+The first two models, Model A and Model B, were convolutional neural networks (CNNS) with different class weights for the loss function. The third model, Model C, was a EfficientNet-B3 model.
 
 They were all trained with 10 epoches and different class weights.
 
-# looked at the training loss per epoch
+I looked at the training loss per epoch for each of the models:
 
-I evaluated the performance of these models individually with accuracy (overall and per class), precision, recall and f1-score.
+Model A training per epoch:
 
-# discuss performance stats
+![Alt](Images/ModalA_training_loss.png)
 
-The meta-model trained on the outputs of modelA, modelB and modelC was a Logistic Regression model.
+For Model A I can see that the training loss per epoch starts increasing at 2 epoches and starts decreasing after epoch 4, this could be due to the optimiser as Adam's moment estimates adapt over  or due to the random composition of the batches (those epochs could have had difficult or mminority-class heavy batches).
 
-I evaluated the performance of the meta-model with accuracy (overall and per class), precision, recall and f1-score.
+I think this is unlikely to be due to the scheduler StepLR as the learning rate only decreases over the epochs.
 
-# discuss performance stats
+After epoch 4 the training loss does decrease indicating that the model is learning and minimizing the error on the training set.
+
+Model B training per epoch:
+
+![Alt](Images/epoch_modelB.png)
+
+For Model B I can see that the training loss per epoch is consistently decreasing which indicates that the model is learning and minimizing the error on the training set.
+
+It's best to note that since I am using class weights for model A, B and C then my training loss values are skewed (some samples contribute more to the loss). And on an imbalanced dataset, even small loss reductions could reflect big accuracy jumps.
+
+## Model evaluation
+I evaluated the performance of these models individually using accuracy. This was done both overall for each model and per class.
+
+|                  | Model A        | Model B  | Model C | Meta-model|
+|------------------|----------------|----------|---------|-----------|
+| Overall Accuracy | 81 %           | 85 %     | 86 %    | 88%       |
+| Class 0 Accuracy | 90.1 %         | 97.8 %   | 88.8 %  | 88.76%    |
+| Class 1 Accuracy | 25.3 %         | 3.8 %    | 72.2 %  | 84.78%    |
+
+Where Pukeko images are class 0 and Takahe images are class 1
+
+The meta-model was better at classifying takahe (class 1) images than any of the three models, but worse at classifying pukeko (class 0) images than all three.
+
+Given the class imbalance, where takahe images made up only 13% of the data set, the small loss in accuracy for class 0 (pukeko) for the significant increase in class 1 (takahe) accuracy is a decent trade off.
