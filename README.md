@@ -33,10 +33,14 @@ The first two models, modelA and modelB, were convolutional neural networks (CNN
 
 They were all trained with 10 epoches and different class weights.
 
+# looked at the training loss per epoch
+
 I evaluated the performance of these models individually with accuracy (overall and per class), precision, recall and f1-score.
+
+# discuss performance stats
 
 The meta-model trained on the outputs of modelA, modelB and modelC was a Logistic Regression model.
 
 I evaluated the performance of the meta-model with accuracy (overall and per class), precision, recall and f1-score.
 
-
+# discuss performance stats
