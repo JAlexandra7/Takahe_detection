@@ -202,23 +202,23 @@ min(verbatim$gbifID)
 library(stringr)
 # Define the folder path
 folder_path <- "Train_data"
-threshold <- 800000  # Specify your threshold here
+threshold <- 800000  # Specifying the threshold
 
 # List all files in the folder (full names needed for deletion)
 files <- list.files(folder_path, full.names = TRUE)
 
-# Extract the first sequence of digits from each file name.
-# We use basename() to remove directory names from the file name for extraction.
+# Extracting the first sequence of digits from each file name.
+# basename() has been used to remove directory names from the file name for extraction.
 numbers <- as.numeric(str_extract(basename(files), "\\d+"))
 
 # Optionally, display the extracted numbers for debugging
 # print(data.frame(File = basename(files), Number = numbers))
 
 # Identify which files have a number less than the threshold.
-# We also check for NA (files where a number was not extracted) and skip those.
+# Also checking for NA's (files where a number was not extracted) and skipping those.
 files_to_delete <- files[!is.na(numbers) & (numbers < threshold)]
 
-# If you want to see which files will be removed, print them:
+# Checking which files will be removed by printing them:
 cat("Files to be deleted:\n")
 print(files_to_delete)
 
