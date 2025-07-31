@@ -56,14 +56,31 @@ For Model B I can see that the training loss per epoch is consistently decreasin
 
 It's best to note that since I am using class weights for model A, B and C then my training loss values are skewed (some samples contribute more to the loss). And on an imbalanced dataset, even small loss reductions could reflect big accuracy jumps.
 
-## Model evaluation
-I evaluated the performance of these models individually using accuracy. This was done both overall for each model and per class, where Pukeko images are class 0 and Takahe images are class 1.
+## Model performance on validation data
 
-|                  | Model A        | Model B  | Model C | Meta-model|
-|------------------|----------------|----------|---------|-----------|
-| Overall Accuracy | 81 %           | 85 %     | 86 %    | 88%       |
-| Class 0 Accuracy | 90.1 %         | 97.8 %   | 88.8 %  | 88.76%    |
-| Class 1 Accuracy | 25.3 %         | 3.8 %    | 72.2 %  | 84.78%    |
+I evaluated the performance of these models using overall accuracy and per class accuracy, where Pukeko images are class 0 and Takahe images are class 1.
+
+|                  | Model A        | Model B  | Model C |
+|------------------|----------------|----------|---------|
+| Overall Accuracy | 81 %           | 85 %     | 86 %    |
+| Class 0 Accuracy | 90.1 %         | 97.8 %   | 88.8 %  |
+| Class 1 Accuracy | 25.3 %         | 3.8 %    | 72.2 %  |
+
+The model with the highest overall accuracy was model C: the EfficientNet-B3 model. The EfficientNet-B3 model also had the highest  .
+
+## Model evaluation on Test data
+
+| Meta-model | Accuracy  | Precision | Recall | f1-score |
+|------------|-----------|-----------|--------|----------|
+| Class 0    | 88.76%    | 97.08%    | 88.76% | 92.74%   |
+| Class 1    | 84.78%    | 56.93%    | 84.79% | 68.12%   |
+
+| Meta-model      |Precision | Recall | f1-score |
+|-----------------|----------|--------|----------|
+| macro average   | 77.01%    | 86.77%  | 80.43% |
+| weighted average| 91.10%    | 88.17%  | 89.07% |
+
+The stacked models overall accuracy was 88.17%
 
 The meta-model was better at classifying takahe (class 1) images than any of the three models, but worse at classifying pukeko (class 0) images than all three.
 
